@@ -6,8 +6,8 @@ jobs:
     steps:
       - checkout
       - run:
-          name: install gcc
-          command: apt-get update && apt-get install -y gcc
+          name: install gcc, python3
+          command: apt-get update && apt-get install -y gcc python3
       - run:
           name: gcc version check
           command: echo `gcc --version`
@@ -23,6 +23,9 @@ jobs:
                   gcc -o ${files%.c} $files
                 done;
 
+                if [[ -e "test.py" ]]; then
+                  python3 test.py;
+                fi;
                 cd ..;
               fi;
             done;
