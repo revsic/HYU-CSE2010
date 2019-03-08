@@ -10,14 +10,14 @@ for fname in ['1_1test1.txt', '1_1test2.txt', '1_1test3.txt']:
         data = f.read()
     
     nums = [int(x) for x in data.split(' ') if x.isdigit()]
-    
-    prev = nums[0]
-    for num in nums[1:]:
-        if prev > num:
-            print('error occured from p1_1 in file {}'.format(fname))
-            sys.exit(1)
-        else:
-            prev = num
+
+    with open('input.txt') as f:
+        data = f.read().split('\n')[1]
+
+    predicted = sorted(int(x) for x in data.split(' ') if x.isdigit())
+    if nums != predicted:
+        print('error occured from p1_1 in file {}'.format(fname))
+        sys.exit(1)
     
     os.rename('input.txt', fname)
 
