@@ -1,0 +1,28 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: buildpack-deps:trusty
+    steps:
+      - checkout
+      - run:
+          name: install gcc
+          command: apt-get update && apt-get install -y gcc
+      - run:
+          name: gcc version check
+          command: echo `gcc --version`
+      - run:
+          name: make all
+          command: |
+            for dirname in */; do
+              if [[ $dirname != .circleci ]]; then
+                echo $dirname;
+                cd $dirname;
+
+                for files in *.c; do
+                  gcc -o ${files%.c} $files
+                done;
+
+                cd ..;
+              fi;
+            done;
