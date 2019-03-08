@@ -6,11 +6,11 @@ int numeric_limit_int_max() {
 }
 
 void selection_sort(int* arr, int size) {
-    int i;
+    int i, j;
     for (i = 0; i < size; ++i) {
         int idx = -1;
         int min = numeric_limit_int_max();
-        for (int j = i; j < size; ++j) {
+        for (j = i; j < size; ++j) {
             if (min > arr[j]) {
                 min = arr[j];
                 idx = j;
@@ -43,7 +43,7 @@ int main() {
     for (i = 0; i < n_input; ++i) {
         fprintf(fp, "%d ", arr[i]);
     }
-    fprintf(fp, '\n');
+    fprintf(fp, "\n");
 
     fclose(fp);
     free(arr);
