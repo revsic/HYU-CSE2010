@@ -9,13 +9,14 @@ typedef struct {
 } studentT;
 
 int main(int argc, char* argv[]) {
-    FILE* fp = fopen(argv[1], "rt");
+    FILE* fp = fopen(argv[1], "r");
     
+    int i;
     int n_input = 0;
     fscanf(fp, "%d", &n_input);
 
     studentT* arr = malloc(sizeof(studentT) * n_input);
-    for (int i = 0; i < n_input; ++i) {
+    for (i = 0; i < n_input; ++i) {
         arr[i].name = malloc(sizeof(char) * 31);
         arr[i].major = malloc(sizeof(char) * 31);
 
@@ -24,14 +25,14 @@ int main(int argc, char* argv[]) {
 
     fclose(fp);
 
-    fp = fopen("output.txt", "wt");
-    for (int i = 0; i < n_input; ++i) {
+    fp = fopen(argv[2], "w");
+    for (i = 0; i < n_input; ++i) {
         fprintf(fp, "%s %d %s\n", arr[i].name, arr[i].studentID, arr[i].major);
     }
 
     fclose(fp);
 
-    for (int i = 0; i < n_input; ++i) {
+    for (i = 0; i < n_input; ++i) {
         free(arr[i].name);
         free(arr[i].major);
     }
