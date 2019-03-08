@@ -12,7 +12,7 @@ jobs:
           name: gcc version check
           command: echo `gcc --version`
       - run:
-          name: make all
+          name: test all
           command: |
             for dirname in */; do
               if [[ $dirname != .circleci ]]; then
