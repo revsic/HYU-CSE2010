@@ -39,7 +39,7 @@ int main() {
 
     selection_sort(arr, n_input);
 
-    fp = fopen("output.txt", "r");
+    fp = fopen("output.txt", "w");
     for (i = 0; i < n_input; ++i) {
         fprintf(fp, "%d ", arr[i]);
     }
