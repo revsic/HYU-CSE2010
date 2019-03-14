@@ -1,0 +1,19 @@
+Insertion Success : 201411
+Current List > 201411 Brian Lee
+Insertion Success : 201402
+Current List > 201402 Susan Kim-201411 Brian Lee
+Insertion Failed. ID 201411 already exists
+Insertion Success : 201423
+Current List > 201402 Susan Kim-201411 Brian Lee-201423 Nancy Park
+Deletion Success : 201411
+Current List > 201402 Susan Kim-201423 Nancy Park
+Find Success : 201402 Susan Kim
+Find 201411 Failed. There is no student ID
+Insertion Success : 111111
+Current List > 111111 Tyler Lee-201402 Susan Kim-201423 Nancy Park
+Deletion Failed : Student ID 111122 is not in the list.
+-----LIST-----
+111111 Tyler Lee
+201402 Susan Kim
+201423 Nancy Park
+--------------
