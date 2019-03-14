@@ -4,7 +4,7 @@ import sys
 # p1_1 selection sort test
 for fname in ['1_1test1.txt', '1_1test2.txt', '1_1test3.txt']:
     os.rename(fname, 'input.txt')
-    os.system('./p1_1')
+    os.system('./p1_1.out')
 
     with open('output.txt') as f:
         data = f.read()
@@ -24,7 +24,7 @@ for fname in ['1_1test1.txt', '1_1test2.txt', '1_1test3.txt']:
 print('p1_1 success')
 
 # p1_2 test
-os.system('./p1_2 student_information.txt output.txt')
+os.system('./p1_2.out student_information.txt output.txt')
 with open('student_information.txt') as f:
     data = f.read()
     predicted = '\n'.join(data.split('\n')[1:])
