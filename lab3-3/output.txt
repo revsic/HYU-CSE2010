@@ -1,0 +1,3 @@
+Infix Form : 4*(7+3%6)-(4/2)+9-(2*3)
+Postfix Form : 4736%+*42/-9+23*-
+Evaluation Result : 41
