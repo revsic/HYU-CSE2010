@@ -198,5 +198,8 @@ int main() {
     fprintf(output, "Postfix Form : %s\n", postfix);
     fprintf(output, "Evaluation Result : %d\n", result);
 
+    fclose(input);
+    fclose(output);
+
     return 0;
 }
