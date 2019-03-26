@@ -59,7 +59,8 @@ int main() {
     // Generate empty stack.
     Stack stack = empty_stack();
 
-    for (int i = 0; i < n_query; ++i) {
+    int i;
+    for (i = 0; i < n_query; ++i) {
         fscanf(input, "%s", option);
 
         // Push proper data to stack.
