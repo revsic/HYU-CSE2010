@@ -46,6 +46,15 @@ Stack make_stack() {
     return stack;
 }
 
+void delete_stack(Stack* stack) {
+    List* next;
+    while (stack->top) {
+        next = stack->top->next;
+        free(stack->top);
+        stack->top = next;
+    }
+}
+
 void push(Stack* stack, ThreadedTree* tree) {
     List* head = malloc(sizeof(List));
     head->next = stack->top;
@@ -82,6 +91,19 @@ Queue make_queue() {
     queue.back = NULL;
     queue.front = NULL;
     return queue;
+}
+
+void delete_queue(Queue* queue) {
+    PairList* pair;
+    while (queue->front != queue->back) {
+        pair = queue->front->next;
+        free(queue->front);
+        queue->front = pair;
+    }
+
+    if (queue->front != NULL) {
+        free(queue->front);
+    }
 }
 
 void push_back(Queue* queue, ThreadedTree* tree, ThreadedTree* parent) {
@@ -134,6 +156,25 @@ ThreadedTree* make_tree(char data) {
     return tree;
 }
 
+void delete_tree(ThreadedTree* root) {
+    Stack stack = make_stack();
+    push(&stack, root);
+
+    ThreadedTree* tree;
+    while ((tree = pop(&stack))) {
+        if (!threaded(tree, LEFT, GET) && tree->left) {
+            push(&stack, tree->left);
+        }
+        if (!threaded(tree, RIGHT, GET) && tree->right) {
+            push(&stack, tree->right);
+        }
+
+        free(tree);
+    }
+
+    delete_stack(&stack);
+}
+
 ThreadedTree** insert_point(ThreadedTree* tree) {
     Queue queue = make_queue();
     push_back(&queue, tree, NULL);
@@ -149,6 +190,7 @@ ThreadedTree** insert_point(ThreadedTree* tree) {
         push_back(&queue, tree->left, tree);
         push_back(&queue, tree->right, tree);
     }
+    delete_queue(&queue);
 
     if (pair.parent->left == tree) {
         return &pair.parent->left;
@@ -193,6 +235,8 @@ void make_inorder_threaded(ThreadedTree* node) {
         prev = node;
         node = node->right;
     }
+
+    delete_stack(&stack);
 }
 
 ThreadedTree* next_node(ThreadedTree* node) {
@@ -247,8 +291,11 @@ int main() {
 
         make_inorder_threaded(root);
         traverse(root, print);
+
+        delete_tree(root);
     }
 
-    fprintf(output, "\n");
+    fclose(input);
+    fclose(output);
     return 0;
 }
