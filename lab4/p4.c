@@ -25,6 +25,21 @@ typedef struct {
     List* top;
 } Stack;
 
+typedef struct {
+    ThreadedTree* tree;
+    ThreadedTree* parent;
+} TreePair;
+
+typedef struct PairList_ {
+    TreePair pair;
+    struct PairList_* next;
+} PairList;
+
+typedef struct {
+    PairList* front;
+    PairList* back;
+} Queue;
+
 Stack make_stack() {
     Stack stack;
     stack.top = NULL;
@@ -55,6 +70,54 @@ ThreadedTree* top(Stack* stack) {
     return stack->top->tree;
 }
 
+TreePair empty_tree_pair() {
+    TreePair pair;
+    pair.tree = NULL;
+    pair.parent = NULL;
+    return pair;
+}
+
+Queue make_queue() {
+    Queue queue;
+    queue.back = NULL;
+    queue.front = NULL;
+    return queue;
+}
+
+void push_back(Queue* queue, ThreadedTree* tree, ThreadedTree* parent) {
+    PairList* list = malloc(sizeof(PairList));
+    list->next = NULL;
+    list->pair.tree = tree;
+    list->pair.parent = parent;
+
+    if (queue->back == NULL) {
+        queue->front = queue->back = list;
+    } else {
+        queue->back->next = list;
+        queue->back = list;
+    }
+}
+
+TreePair pop_front(Queue* queue) {
+    PairList* front = queue->front;
+    if (front == NULL) {
+        return empty_tree_pair();
+    }
+
+    TreePair ret = front->pair;
+    if (front == queue->back) {
+        queue->back = NULL;
+    }
+    queue->front = front->next;
+
+    free(front);
+    return ret;
+}
+
+TreePair front(Queue* queue) {
+    return queue->front->pair;
+}
+
 int threaded(ThreadedTree* tree, int dir, int set) {
     if (set == SET) {
         tree->thread |= (1 << dir);
@@ -72,7 +135,26 @@ ThreadedTree* make_tree(char data) {
 }
 
 ThreadedTree** insert_point(ThreadedTree* tree) {
-    return NULL;
+    Queue queue = make_queue();
+    push_back(&queue, tree, NULL);
+    
+    TreePair pair;
+    while (1) {
+        pair = pop_front(&queue);
+        tree = pair.tree;
+        
+        if (tree == NULL) {
+            break;
+        }
+        push_back(&queue, tree->left, tree);
+        push_back(&queue, tree->right, tree);
+    }
+
+    if (pair.parent->left == tree) {
+        return &pair.parent->left;
+    } else {
+        return &pair.parent->right;
+    }
 }
 
 void insert_node(ThreadedTree* tree, char data) {
@@ -87,8 +169,7 @@ void make_inorder_threaded(ThreadedTree* node) {
     while (1) {
         if (already_pop) {
             already_pop = 0;
-        }
-        else {
+        } else {
             for (; node; node = node->left) {
                 push(&stack, node);
             }
@@ -138,24 +219,36 @@ void traverse(ThreadedTree* node, void(*func)(char)) {
     }
 }
 
+FILE* output;
 void print(char data) {
-    printf("%c  ", data);
+    fprintf(output, "%c  ", data);
 }
 
 int main() {
-    ThreadedTree* root = make_tree('A');
-    root->left = make_tree('B');
-    root->right = make_tree('C');
-    root->left->left = make_tree('D');
-    root->left->right = make_tree('E');
-    root->right->left = make_tree('F');
-    root->right->right = make_tree('G');
-    root->left->left->left = make_tree('H');
-    root->left->left->right = make_tree('I');
+    output = fopen("output.txt", "w");
+    FILE* input = fopen("input.txt", "r");
 
-    make_inorder_threaded(root);
-    traverse(root, print);
+    int n_list;
+    fscanf(input, "%d", &n_list);
+    fgetc(input);
 
-    printf("\n");
+    int i;
+    char data[2];
+    ThreadedTree* root;
+
+    if (n_list > 0) {
+        fscanf(input, "%s", data);
+        root = make_tree(data[0]);
+
+        for (i = 1; i < n_list; ++i) {
+            fscanf(input, "%s", data);
+            insert_node(root, data[0]);
+        }
+
+        make_inorder_threaded(root);
+        traverse(root, print);
+    }
+
+    fprintf(output, "\n");
     return 0;
 }
