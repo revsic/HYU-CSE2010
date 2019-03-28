@@ -68,7 +68,8 @@ int main() {
     // Generate empty queue.
     Queue queue = empty_queue();
 
-    for (int i = 0; i < n_query; ++i) {
+    int i;
+    for (i = 0; i < n_query; ++i) {
         fscanf(input, "%s", option);
 
         // Enqueue proper data to queue.
