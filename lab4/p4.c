@@ -125,7 +125,7 @@ ThreadedTree* next_node(ThreadedTree* node) {
 }
 
 void traverse(ThreadedTree* node, void(*func)(char)) {
-    while (node->left) {
+    while (!threaded(node, LEFT, GET)) {
         node = node->left;
     }
 
