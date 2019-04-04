@@ -37,4 +37,6 @@ int main(int argc, char* argv[]) {
         free(arr[i].major);
     }
     free(arr);
+
+    return 0;
 }

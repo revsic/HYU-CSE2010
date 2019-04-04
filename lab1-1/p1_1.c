@@ -47,4 +47,6 @@ int main() {
 
     fclose(fp);
     free(arr);
+
+    return 0;
 }
