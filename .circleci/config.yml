@@ -19,8 +19,8 @@ jobs:
               cd $dirname;
 
               for files in *.c; do
-                gcc -o ${files.%c}.out $files;
-                ./${files.%c}.out
+                gcc -o ${files%.c}.out $files;
+                ./${files%.c}.out
                 cat output.txt
               done;
 
