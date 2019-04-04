@@ -9,7 +9,7 @@ typedef struct {
 } studentT;
 
 int main(int argc, char* argv[]) {
-    FILE* fp = fopen(argv[1], "r");
+    FILE* fp = fopen("input.txt", "r");
     
     int i;
     int n_input = 0;
@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 
     fclose(fp);
 
-    fp = fopen(argv[2], "w");
+    fp = fopen("output.txt", "w");
     for (i = 0; i < n_input; ++i) {
         fprintf(fp, "%s %d %s\n", arr[i].name, arr[i].studentID, arr[i].major);
     }
