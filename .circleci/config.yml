@@ -15,17 +15,14 @@ jobs:
           name: test all
           command: |
             for dirname in */; do
-              if [[ $dirname != .circleci ]]; then
-                echo $dirname;
-                cd $dirname;
+              echo $dirname;
+              cd $dirname;
 
-                for files in *.c; do
-                  gcc -o ${files%.c}.out $files
-                done;
+              for files in *.c; do
+                gcc -o ${files.%c}.out $files;
+                ./${files.%c}.out
+                cat output.txt
+              done;
 
-                if [[ -e "test.py" ]]; then
-                  python3 test.py;
-                fi;
-                cd ..;
-              fi;
+              cd ..;
             done;
