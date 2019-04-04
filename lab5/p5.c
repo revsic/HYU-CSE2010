@@ -1,19 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Macro for stack size of traversal functions.
 #define MAX_TRAVERSE_DEPTH 512
 
+// Binary tree
 typedef struct Node_ {
     int data;
     struct Node_* left;
     struct Node_* right;
 } Node;
 
+// Node pair for storing parent and child.
 typedef struct {
     Node* parent;
     Node* child;
 } NodePair;
 
+// Generate node with given data.
 Node* make_node(int data) {
     Node* node = malloc(sizeof(Node));
     node->data = data;
@@ -22,6 +26,7 @@ Node* make_node(int data) {
     return node;
 }
 
+// Generate node pair with given parent and child.
 NodePair make_pair(Node* parent, Node* child) {
     NodePair pair;
     pair.parent = parent;
@@ -29,6 +34,10 @@ NodePair make_pair(Node* parent, Node* child) {
     return pair;
 }
 
+// Find max node of given node.
+// Returns:
+//     NULL, if given node is null
+//     Node*, if otherwise
 Node* max_node(Node* node) {
     Node* prev = NULL;
     while (node) {
@@ -38,6 +47,11 @@ Node* max_node(Node* node) {
     return prev;
 }
 
+// Find the node that owns given data.
+// Returns:
+//     NodePair with child NULL, if data is not found
+//     NodePair with both NULL, if given node is NULL
+//     NodePair, if otherwise
 NodePair find_node(Node* node, int data) {
     Node* prev = NULL;
     while (node && node->data != data) {
@@ -51,6 +65,10 @@ NodePair find_node(Node* node, int data) {
     return make_pair(prev, node);
 }
 
+// Insert node with given data.
+// Returns:
+//     0, if data already exists.
+//     1, if insertion success.
 int insert_node(Node* node, int data) {
     NodePair pair = find_node(node, data);
     if (pair.child != NULL) {
@@ -65,6 +83,12 @@ int insert_node(Node* node, int data) {
     return 1;
 }
 
+// Delete node that owns given data.
+// Returns:
+//     0, if data is not found.
+//     1, if deletion success.
+// Exceptions:
+//     if it try to delete `node`.
 int delete_node(Node* node, int data) {
     NodePair found = find_node(node, data);
     if (found.child == NULL) {
@@ -89,6 +113,7 @@ int delete_node(Node* node, int data) {
     return 1;
 }
 
+// Traversal in pre-order with calling given callback.
 void preorder_traversal(Node* node, void(*callback)(Node*)) {
     int idx = 0;
     Node* stack[MAX_TRAVERSE_DEPTH] = { node, };
@@ -106,6 +131,7 @@ void preorder_traversal(Node* node, void(*callback)(Node*)) {
     }
 }
 
+// Traversal in in-order with calling given callback.
 void inorder_traversal(Node* node, void(*callback)(Node*)) {
     if (node) {
         inorder_traversal(node->left, callback);
@@ -114,6 +140,7 @@ void inorder_traversal(Node* node, void(*callback)(Node*)) {
     }
 }
 
+// Traversal in post-order with calling given callback.
 void postorder_traversal(Node* node, void(*callback)(Node*)) {
     if (node) {
         postorder_traversal(node->left, callback);
@@ -122,6 +149,7 @@ void postorder_traversal(Node* node, void(*callback)(Node*)) {
     }
 }
 
+// Insert data.
 void insert(Node** tree, FILE* input, FILE* output) {
     int num, res;
     fscanf(input, "%d", &num);
@@ -136,6 +164,7 @@ void insert(Node** tree, FILE* input, FILE* output) {
     }
 }
 
+// Delete data.
 void delete(Node** tree, FILE* input, FILE* output) {
     int num, res;
     fscanf(input, "%d", &num);
@@ -145,6 +174,7 @@ void delete(Node** tree, FILE* input, FILE* output) {
     }
 }
 
+// Find data.
 void find(Node* tree, FILE* input, FILE* output) {
     int num;
     fscanf(input, "%d", &num);
@@ -167,6 +197,7 @@ void free_callback(Node* node) {
 }
 
 int main() {
+    // Prepare for File IO
     output = fopen("output.txt", "w");
     FILE* input = fopen("input.txt", "r");
 
