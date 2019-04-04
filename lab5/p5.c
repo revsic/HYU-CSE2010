@@ -133,10 +133,22 @@ void preorder_traversal(Node* node, void(*callback)(Node*)) {
 
 // Traversal in in-order with calling given callback.
 void inorder_traversal(Node* node, void(*callback)(Node*)) {
-    if (node) {
-        inorder_traversal(node->left, callback);
+    int idx = -1;
+    Node* stack[MAX_TRAVERSE_DEPTH] = { 0, };
+
+    while (1) {
+        for (; node; node = node->left) {
+            stack[++idx] = node;
+        }
+
+        if (idx < 0) {
+            break;
+        }
+
+        node = stack[idx--];
         callback(node);
-        inorder_traversal(node->right, callback);
+
+        node = node->right;
     }
 }
 
