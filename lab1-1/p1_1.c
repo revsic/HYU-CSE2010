@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 int numeric_limit_int_max() {
-    return (1 << (sizeof(int) * 8 - 1)) - 1;
+    return 1 << (sizeof(int) * 8 - 2);
 }
 
 void selection_sort(int* arr, int size) {
