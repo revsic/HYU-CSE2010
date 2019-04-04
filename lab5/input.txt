@@ -1,0 +1,21 @@
+i 4
+i 2
+i 6
+i 1
+i 3
+i 5
+i 7
+i 3
+pi
+d 4
+d 2
+d 6
+pi
+i 4
+i 2
+d 10
+pi
+pr
+po
+f 4
+f 8
