@@ -42,7 +42,7 @@ Matrix make_matrix(int height, int width) {
     int i, j;
     for (i = 0; i < height; ++i) {
         matrix.ptr[i] = malloc(sizeof(char) * width);
-        for (int j = 0; j < width; ++j) {
+        for (j = 0; j < width; ++j) {
             matrix.ptr[i][j] = 0;
         }
     }
