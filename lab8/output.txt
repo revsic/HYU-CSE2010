@@ -1,0 +1,8 @@
+insert 4
+insert 1
+insert 9
+insert 10
+1 is already in heap.
+10 is in the heap.
+5 is not in the heap.
+10 9 4 1 
