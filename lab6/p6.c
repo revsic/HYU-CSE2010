@@ -15,6 +15,12 @@ typedef struct {
     int success;
 } InsertResult;
 
+// Structure for deletion result.
+typedef struct {
+    AVLNode* node;
+    int success;
+} RemoveResult;
+
 // Return larger value.
 int max(int a, int b) {
     return a > b ? a : b;
@@ -144,6 +150,72 @@ InsertResult insert(int elem, AVLNode* node) {
     result.success = 1;
 
     update_height(node);
+    return result;
+}
+
+RemoveResult delete(int elem, AVLNode* node) {
+    RemoveResult result;
+    if (node == NULL) {
+        result.node = NULL;
+        result.success = 0;
+        return result;
+    }
+    if (node->elem > elem) {
+        result = delete(elem, node->left);
+        if (!result.success) {
+            result.node = node;
+            return result;
+        }
+        node->left = result.node;
+    } else if (node->elem < elem) {
+        result = delete(elem, node->right);
+        if (!result.success) {
+            result.node = node;
+            return result;
+        }
+        node->right = result.node;
+    } else if (node->left != NULL && node->right != NULL) {
+        AVLNode* temp = node->right;
+        AVLNode* prev = temp;
+        while (temp->left) {
+            prev = temp;
+            temp = temp->left;
+        }
+        node->elem = prev->elem;
+        result = delete(node->elem, node->right);
+        node->right = result.node;
+    } else {
+        AVLNode* temp = node;
+        if (node->left == NULL) {
+            node = node->right;
+        } else if (node->right == NULL) {
+            node = node->left;
+        }
+        free(temp);
+    }
+
+    result.success = 1;
+    result.node = node;
+    if (node != NULL) {
+        update_height(node);
+
+        int hleft = height(node->left);
+        int hright = height(node->right);
+        if (hleft >= hright + 2) {
+            if (height(node->left->left) >= height(node->left->right)) {
+                node = rotate_left(node);
+            } else {
+                node = rotate_left_right(node);
+            }
+        } else if (hright >= hleft + 2) {
+            if (height(node->right->right) >= height(node->right->left)) {
+                node = rotate_right(node);
+            } else {
+                node = rotate_right_left(node);
+            }
+        }
+    }
+
     return result;
 }
 
