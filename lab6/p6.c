@@ -194,8 +194,6 @@ RemoveResult delete(int elem, AVLNode* node) {
         free(temp);
     }
 
-    result.success = 1;
-    result.node = node;
     if (node != NULL) {
         update_height(node);
 
@@ -216,6 +214,8 @@ RemoveResult delete(int elem, AVLNode* node) {
         }
     }
 
+    result.success = 1;
+    result.node = node;
     return result;
 }
 
