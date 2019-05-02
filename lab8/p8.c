@@ -151,6 +151,29 @@ int find_elem(Heap* heap, int elem, int index) {
     }
 }
 
+// Build heap with given sequence
+Heap heapify(int* list, int n, int(*compare)(int, int)) {
+    Heap heap = make_heap(n + 1, compare);
+    heap.size = n;
+    for (int i = 0; i < n; ++i) {
+        heap.elements[i + 1] = list[i];
+    }
+    for (int i = n / 2; i > 0; --i) {
+        propagate(&heap, i);
+    }
+    return heap;
+}
+
+// Heap sort
+void heap_sort(int* list, int n, int(*compare)(int, int)) {
+    Heap heap = heapify(list, n, compare);
+    for (int i = 0; i < n; ++i) {
+        list[i] = top(&heap);
+        pop(&heap);
+    }
+    delete_heap(&heap);
+}
+
 // Read number and insert it to heap.
 void insert(Heap* heap, FILE* input, FILE* output) {
     int num;
