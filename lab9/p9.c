@@ -70,25 +70,32 @@ FindResult find(Node* node, int key) {
 }
 
 void split_to(Node* parent, Node* child, int insertion_point) {
-    int i, j, k;
+    int i, j;
+    for (i = parent->n_key; i > insertion_point; --i) {
+        parent->key[i] = parent->key[i - 1];
+    }
+    for (i = order; i > insertion_point + 1; --i) {
+        parent->child[i] = parent->child[i - 1];
+    }
+
     int mid = order / 2;
     parent->key[insertion_point] = child->key[mid];
 
     Node* left = empty_node();
     left->n_key = mid;
-    for (j = 0; j < mid; ++j) {
-        left->key[j] = child->key[j];
-        left->child[j] = child->child[j];
+    for (i = 0; i < mid; ++i) {
+        left->key[i] = child->key[i];
+        left->child[i] = child->child[i];
     }
-    left->child[j] = child->child[j];
+    left->child[i] = child->child[i];
 
     Node* right = empty_node();
     right->n_key = order - mid - 1;
-    for (j = mid + 1, k = 0; j < order; ++j, ++k) {
-        right->key[k] = child->key[j];
-        right->child[k] = child->child[j];
+    for (i = mid + 1, j = 0; i < order; ++i, ++j) {
+        right->key[j] = child->key[i];
+        right->child[j] = child->child[i];
     }
-    right->child[k] = child->child[j];
+    right->child[j] = child->child[i];
 
     parent->child[insertion_point] = left;
     parent->child[insertion_point + 1] = right;
@@ -97,7 +104,7 @@ void split_to(Node* parent, Node* child, int insertion_point) {
 }
 
 int insert_internal(Node* node, int key) {
-    int i, j, k;
+    int i, j;
     int result;
     if (node == NULL) {
         return INSERT_REQUIRED;
@@ -118,14 +125,6 @@ int insert_internal(Node* node, int key) {
     if (result == INSERT_FAIL || result == INSERT_SUCCESS) {
         return result;
     } else if (result == ROTATION_REQUIRED) {
-        for (j = node->n_key; j > i; --j) {
-            node->key[j] = node->key[j - 1];
-        }
-
-        for (j = order; j > i + 1; --j) {
-            node->child[j] = node->child[j - 1];
-        }
-
         Node* child = node->child[i];
         split_to(node, child, i);
         delete_node(child);
