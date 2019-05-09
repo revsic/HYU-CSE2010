@@ -28,6 +28,13 @@ enum InsertStatus {
     ROTATION_REQUIRED = 3,
 };
 
+// Swap two integers.
+void swap(int* a, int* b) {
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+
 // Create empty node with given order.
 Node* empty_node(int order) {
     Node* node = malloc(sizeof(Node));
@@ -103,6 +110,39 @@ void insert_key(Node* node, int insertion_point, int key) {
     node->n_key += 1;
 }
 
+// Delete key from node with given deletion point.
+void delete_key(Node* node, int deletion_point) {
+    int i;
+    // pull all keys after deletion point to compact list
+    for (i = deletion_point; i < node->n_key - 1; ++i) {
+        node->key[i] = node->key[i + 1];
+    }
+    // decrease number of keys and fill zero
+    node->key[--node->n_key] = 0;
+}
+
+// Insert subtree to node with given insertion point.
+void insert_child(Node* node, int insertion_point, Node* subtree) {
+    int i;
+    // push all subtrees after insertion point to get blank
+    for (i = node->n_key + 1; i > insertion_point; --i) {
+        node->child[i] = node->child[i - 1];
+    }
+    // assign subtree
+    node->child[insertion_point] = subtree;
+}
+
+// Delete subtree from node with given deletion point.
+void delete_child(Node* node, int deletion_point) {
+    int i;
+    // pull all subtrees after deletion point to compact list
+    for (i = deletion_point; i < node->n_key; ++i) {
+        node->child[i] = node->child[i + 1];
+    }
+    // fill with NULL
+    node->child[node->n_key] = NULL;
+}
+
 // Split child on half and assign median value to insertion point of parent node.
 void split_to(Node* parent, Node* child, int insertion_point, int order) {
     int i, j;
@@ -140,6 +180,89 @@ void split_to(Node* parent, Node* child, int insertion_point, int order) {
     parent->child[insertion_point + 1] = right;
 }
 
+// Return non-zero value if current child is rotatable.
+int rotatable(Node* node, int pos, int order) {
+    int left, right;
+    // check left rotatable
+    for (left = pos - 1; left >= 0; --left) {
+        if (node->child[left]->n_key + 1 < order) {
+            break;
+        }
+    }
+    // check right rotatable
+    for (right = pos + 1; right <= node->n_key; ++right) {
+        if (node->child[right]->n_key + 1 < order) {
+            break;
+        }
+    }
+    // calculate relative position
+    int rel_left = left - pos;
+    int rel_right = right - pos;
+    // if left and right both rotatable
+    if (left >= 0 && right <= node->n_key) {
+        return -rel_left < rel_right ? rel_left : rel_right;
+    // if left only rotatable
+    } else if (left >= 0) {
+        return rel_left;
+    // if right only rotatable
+    } else if (right <= node->n_key) {
+        return rel_right;
+    // if both are not
+    } else {
+        return 0;
+    }
+}
+
+// Rotate child to left.
+void rotate_left(Node* node, int start, int end) {
+    int i, j;
+    // until rotation finish
+    for (i = start; i > end; --i) {
+        Node* child = node->child[i];
+        Node* left_child = node->child[i - 1];
+
+        // backup key and subtree for rotation
+        int key = child->key[0];
+        Node* subtree = child->child[0];
+        
+        // delete key and subtree from child node
+        delete_child(child, 0);
+        delete_key(child, 0);  // side-effect: child->n_key -=1;
+
+        // swap with proper key of parent node
+        swap(&key, &node->key[i - 1]);
+        // append key and subtree to left child
+        left_child->key[left_child->n_key] = key;
+        left_child->child[left_child->n_key + 1] = subtree;
+        left_child->n_key += 1;
+    }    
+}
+
+// Rotate child to right.
+void rotate_right(Node* node, int start, int end) {
+    int i, j;
+    // until rotation finish
+    for (i = start; i < end; ++i) {
+        Node* child = node->child[i];
+        Node* right_child = node->child[i + 1];
+
+        // backup key and subtree for rotation
+        int key = child->key[child->n_key - 1];
+        Node* subtree = child->child[child->n_key];
+
+        // delete key and subtree from child node
+        child->key[child->n_key - 1] = 0;
+        child->child[child->n_key] = NULL;
+        child->n_key -= 1;
+
+        // swap with proper key of parent node
+        swap(&key, &node->key[i]);
+        // append key and subtree to right child
+        insert_child(right_child, 0, subtree);
+        insert_key(right_child, 0, key);  // side-effect: right_child->n_key += 1;
+    }
+}
+
 // Internal implementation of method insert.
 int insert_internal(Node* node, int key, int order) {
     int i, j;
@@ -170,17 +293,30 @@ int insert_internal(Node* node, int key, int order) {
         return result;
     // if rotation is required
     } else if (result == ROTATION_REQUIRED) {
-        Node* child = node->child[i];
-        // split child on half and assign to parent
-        split_to(node, child, i, order);
-        delete_node(child);
-
-        // if insertion success
-        if (node->n_key < order) {
+        int pos = rotatable(node, i, order);
+        // if rotation available
+        if (pos != 0) {
+            // if left rotation available
+            if (pos < 0) {
+                rotate_left(node, i, i + pos);
+            // if right rotation available
+            } else {
+                rotate_right(node, i, i + pos);
+            }
             return INSERT_SUCCESS;
-        //if current node overflow
         } else {
-            return ROTATION_REQUIRED;
+            Node* child = node->child[i];
+            // split child on half and assign to parent
+            split_to(node, child, i, order);
+            delete_node(child);
+
+            // if insertion success
+            if (node->n_key < order) {
+                return INSERT_SUCCESS;
+            // if current node overflow
+            } else {
+                return ROTATION_REQUIRED;
+            }
         }
     // if insertion required in this node
     } else if (result == INSERT_REQUIRED) {
