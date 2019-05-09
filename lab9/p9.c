@@ -1,11 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define INSERT_FAIL 0
-#define INSERT_SUCCESS 1
-#define INSERT_REQUIRED 2
-#define ROTATION_REQUIRED 3
-
 typedef struct Node_ {
     int n_key;
     struct Node_** child;
@@ -21,6 +16,13 @@ typedef struct {
     Node* child;
     Node* parent;
 } FindResult;
+
+enum InsertStatus {
+    INSERT_FAIL = 0,
+    INSERT_SUCCESS = 1,
+    INSERT_REQUIRED = 2,
+    ROTATION_REQUIRED = 3,
+};
 
 void swap(int* a, int* b) {
     int tmp = *a;
