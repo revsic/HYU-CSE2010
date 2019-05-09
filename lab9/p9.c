@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define order 3
-
 #define INSERT_FAIL 0
 #define INSERT_SUCCESS 1
 #define INSERT_REQUIRED 2
@@ -10,9 +8,14 @@
 
 typedef struct Node_ {
     int n_key;
-    struct Node_* child[order + 1];
-    int key[order];
+    struct Node_** child;
+    int* key;
 } Node;
+
+typedef struct {
+    Node* root;
+    int order;
+} BTree;
 
 typedef struct {
     Node* child;
@@ -25,9 +28,11 @@ void swap(int* a, int* b) {
     *b = tmp;
 }
 
-Node* empty_node() {
+Node* empty_node(int order) {
     Node* node = malloc(sizeof(Node));
     node->n_key = 0;
+    node->child = malloc(sizeof(Node*) * (order + 1));
+    node->key = malloc(sizeof(int) * order);
     
     int i;
     for (i = 0; i < order + 1; ++i) {
@@ -40,6 +45,8 @@ Node* empty_node() {
 }
 
 void delete_node(Node* node) {
+    free(node->child);
+    free(node->key);
     free(node);
 }
 
@@ -65,11 +72,11 @@ FindResult find_internal(Node* parent, Node* node, int key) {
     return find_internal(node, node->child[i], key);
 }
 
-FindResult find(Node* node, int key) {
-    return find_internal(NULL, node, key);
+FindResult find(BTree* tree, int key) {
+    return find_internal(NULL, tree->root, key);
 }
 
-void split_to(Node* parent, Node* child, int insertion_point) {
+void split_to(Node* parent, Node* child, int insertion_point, int order) {
     int i, j;
     for (i = parent->n_key; i > insertion_point; --i) {
         parent->key[i] = parent->key[i - 1];
@@ -81,7 +88,7 @@ void split_to(Node* parent, Node* child, int insertion_point) {
     int mid = order / 2;
     parent->key[insertion_point] = child->key[mid];
 
-    Node* left = empty_node();
+    Node* left = empty_node(order);
     left->n_key = mid;
     for (i = 0; i < mid; ++i) {
         left->key[i] = child->key[i];
@@ -89,7 +96,7 @@ void split_to(Node* parent, Node* child, int insertion_point) {
     }
     left->child[i] = child->child[i];
 
-    Node* right = empty_node();
+    Node* right = empty_node(order);
     right->n_key = order - mid - 1;
     for (i = mid + 1, j = 0; i < order; ++i, ++j) {
         right->key[j] = child->key[i];
@@ -103,7 +110,7 @@ void split_to(Node* parent, Node* child, int insertion_point) {
     parent->n_key += 1;
 }
 
-int insert_internal(Node* node, int key) {
+int insert_internal(Node* node, int key, int order) {
     int i, j;
     int result;
     if (node == NULL) {
@@ -114,19 +121,19 @@ int insert_internal(Node* node, int key) {
         if (key == node->key[i]) {
             return INSERT_FAIL;
         } else if (key < node->key[i]) {
-            result = insert_internal(node->child[i], key);
+            result = insert_internal(node->child[i], key, order);
             break;
         }
     }
     if (i == node->n_key) {
-        result = insert_internal(node->child[i], key);
+        result = insert_internal(node->child[i], key, order);
     }
 
     if (result == INSERT_FAIL || result == INSERT_SUCCESS) {
         return result;
     } else if (result == ROTATION_REQUIRED) {
         Node* child = node->child[i];
-        split_to(node, child, i);
+        split_to(node, child, i, order);
         delete_node(child);
 
         if (node->n_key < order) {
@@ -155,24 +162,23 @@ int insert_internal(Node* node, int key) {
     return INSERT_SUCCESS;
 }
 
-Node* insert(Node* root, int key) {
-    if (root == NULL) {
-        root = empty_node();
+void insert(BTree* tree, int key) {
+    if (tree->root == NULL) {
+        Node* root = empty_node(tree->order);
         root->n_key = 1;
         root->key[0] = key;
-        return root;
+        tree->root = root;
+        return;
     }
 
-    int i, j, k;
-    int result = insert_internal(root, key);
+    int result = insert_internal(tree->root, key, tree->order);
     if (result == ROTATION_REQUIRED) {
-        Node* new_root = empty_node();
-        split_to(new_root, root, 0);
-        delete_node(root);
+        Node* new_root = empty_node(tree->order);
+        split_to(new_root, tree->root, 0, tree->order);
+        delete_node(tree->root);
 
-        root = new_root;
+        tree->root = new_root;
     }
-    return root;
 }
 
 void inorder(Node* node, FILE* fp) {
@@ -186,31 +192,44 @@ void inorder(Node* node, FILE* fp) {
     }
 }
 
-void delete_btree(Node* node) {
+void delete_node_recur(Node* node) {
     if (node) {
         int i;
         for (i = 0; i <= node->n_key; ++i) {
-            delete_btree(node->child[i]);
+            delete_node_recur(node->child[i]);
         }
-        free(node);
+        delete_node(node);
     }
+}
+
+BTree* empty_tree(int order) {
+    BTree* tree = malloc(sizeof(BTree));
+    tree->root = NULL;
+    tree->order = order;
+    return tree;
+}
+
+void delete_btree(BTree* tree) {
+    delete_node_recur(tree->root);
+    free(tree);
 }
 
 int main() {
     FILE* input = fopen("./input.txt", "r");
     FILE* output = fopen("./output.txt", "w");
 
+    BTree* tree = empty_tree(3);
+
     int num;
     char opt[2];
-    Node* root = NULL;
     while (fscanf(input, "%s", opt) == 1) {
         switch (opt[0]) {
         case 'i':
             fscanf(input, "%d", &num);
-            root = insert(root, num);
+            insert(tree, num);
             break;
         case 'p':
-            inorder(root, output);
+            inorder(tree->root, output);
             fprintf(output, "\n");
             break;
         default:
@@ -218,7 +237,7 @@ int main() {
         }
     }
 
-    delete_btree(root);
+    delete_btree(tree);
     fclose(output);
     fclose(input);
 
