@@ -76,17 +76,19 @@ FindResult find(BTree* tree, int key) {
     return find_internal(NULL, tree->root, key);
 }
 
+void insert_key(Node* node, int insertion_point, int key) {
+    int i;
+    for (i = node->n_key; i > insertion_point; --i) {
+        node->key[i] = node->key[i - 1];
+    }
+    node->key[insertion_point] = key;
+    node->n_key += 1;
+}
+
 void split_to(Node* parent, Node* child, int insertion_point, int order) {
     int i, j;
-    for (i = parent->n_key; i > insertion_point; --i) {
-        parent->key[i] = parent->key[i - 1];
-    }
-    for (i = order; i > insertion_point + 1; --i) {
-        parent->child[i] = parent->child[i - 1];
-    }
-
     int mid = order / 2;
-    parent->key[insertion_point] = child->key[mid];
+    insert_key(parent, insertion_point, child->key[mid]);
 
     Node* left = empty_node(order);
     left->n_key = mid;
@@ -104,10 +106,12 @@ void split_to(Node* parent, Node* child, int insertion_point, int order) {
     }
     right->child[j] = child->child[i];
 
+    for (i = order; i > insertion_point + 1; --i) {
+        parent->child[i] = parent->child[i - 1];
+    }
+
     parent->child[insertion_point] = left;
     parent->child[insertion_point + 1] = right;
-
-    parent->n_key += 1;
 }
 
 int insert_internal(Node* node, int key, int order) {
@@ -147,11 +151,7 @@ int insert_internal(Node* node, int key, int order) {
                 break;
             }
         }
-        for (j = node->n_key; j > i; --j) {
-            node->key[j] = node->key[j - 1];
-        }
-        node->key[i] = key;
-        node->n_key += 1;
+        insert_key(node, i, key);
 
         if (node->n_key < order) {
             return INSERT_SUCCESS;
@@ -213,7 +213,7 @@ BTree* empty_tree(int order) {
     return tree;
 }
 
-void delete_btree(BTree* tree) {
+void delete_tree(BTree* tree) {
     postorder(tree->root, delete_node);
     free(tree);
 }
@@ -241,7 +241,7 @@ int main() {
         }
     }
 
-    delete_btree(tree);
+    delete_tree(tree);
     fclose(output);
     fclose(input);
 
