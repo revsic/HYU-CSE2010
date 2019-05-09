@@ -50,7 +50,7 @@ FindResult find_result(Node* child, Node* parent) {
     return result;
 }
 
-FindResult find(Node* parent, Node* node, int key) {
+FindResult find_internal(Node* parent, Node* node, int key) {
     int i;
     if (node == NULL) {
         return find_result(NULL, parent);
@@ -59,10 +59,14 @@ FindResult find(Node* parent, Node* node, int key) {
         if (key == node->key[i]) {
             return find_result(node, parent);
         } else if (key < node->key[i]) {
-            return find(node, node->child[i], key);
+            return find_internal(node, node->child[i], key);
         }
     }
-    return find(node, node->child[i], key);
+    return find_internal(node, node->child[i], key);
+}
+
+FindResult find(Node* node, int key) {
+    return find_internal(NULL, node, key);
 }
 
 int insert_internal(Node* node, int key) {
