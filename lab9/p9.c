@@ -92,6 +92,8 @@ void split_to(Node* parent, Node* child, int insertion_point) {
 
     parent->child[insertion_point] = left;
     parent->child[insertion_point + 1] = right;
+
+    parent->n_key += 1;
 }
 
 int insert_internal(Node* node, int key) {
@@ -119,16 +121,15 @@ int insert_internal(Node* node, int key) {
         for (j = node->n_key; j > i; --j) {
             node->key[j] = node->key[j - 1];
         }
-        Node* child = node->child[i];
 
         for (j = order; j > i + 1; --j) {
             node->child[j] = node->child[j - 1];
         }
 
+        Node* child = node->child[i];
         split_to(node, child, i);
         delete_node(child);
 
-        node->n_key += 1;
         if (node->n_key < order) {
             return INSERT_SUCCESS;
         } else {
@@ -167,8 +168,6 @@ Node* insert(Node* root, int key) {
     int result = insert_internal(root, key);
     if (result == ROTATION_REQUIRED) {
         Node* new_root = empty_node();
-        new_root->n_key = 1;
-
         split_to(new_root, root, 0);
         delete_node(root);
 
