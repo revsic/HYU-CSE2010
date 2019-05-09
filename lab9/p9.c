@@ -69,6 +69,31 @@ FindResult find(Node* node, int key) {
     return find_internal(NULL, node, key);
 }
 
+void split_to(Node* parent, Node* child, int insertion_point) {
+    int i, j, k;
+    int mid = order / 2;
+    parent->key[insertion_point] = child->key[mid];
+
+    Node* left = empty_node();
+    left->n_key = mid;
+    for (j = 0; j < mid; ++j) {
+        left->key[j] = child->key[j];
+        left->child[j] = child->child[j];
+    }
+    left->child[j] = child->child[j];
+
+    Node* right = empty_node();
+    right->n_key = order - mid - 1;
+    for (j = mid + 1, k = 0; j < order; ++j, ++k) {
+        right->key[k] = child->key[j];
+        right->child[k] = child->child[j];
+    }
+    right->child[k] = child->child[j];
+
+    parent->child[insertion_point] = left;
+    parent->child[insertion_point + 1] = right;
+}
+
 int insert_internal(Node* node, int key) {
     int i, j, k;
     int result;
@@ -94,34 +119,14 @@ int insert_internal(Node* node, int key) {
         for (j = node->n_key; j > i; --j) {
             node->key[j] = node->key[j - 1];
         }
-        int mid = order / 2;
         Node* child = node->child[i];
-        node->key[i] = child->key[mid];
 
         for (j = order; j > i + 1; --j) {
             node->child[j] = node->child[j - 1];
         }
 
-        Node* left = empty_node();
-        left->n_key = mid;
-        for (j = 0; j < mid; ++j) {
-            left->key[j] = child->key[j];
-            left->child[j] = child->child[j];
-        }
-        left->child[j] = child->child[j];
-
-        Node* right = empty_node();
-        right->n_key = order - mid - 1;
-        for (j = mid + 1, k = 0; j < order; ++j, ++k) {
-            right->key[k] = child->key[j];
-            right->child[k] = child->child[j];
-        }
-        right->child[k] = child->child[j];
-
+        split_to(node, child, i);
         delete_node(child);
-
-        node->child[i] = left;
-        node->child[i + 1] = right;
 
         node->n_key += 1;
         if (node->n_key < order) {
@@ -164,29 +169,9 @@ Node* insert(Node* root, int key) {
         Node* new_root = empty_node();
         new_root->n_key = 1;
 
-        int mid = order / 2;
-        new_root->key[0] = root->key[mid];
-
-        Node* left = empty_node();
-        left->n_key = mid;
-        for (j = 0; j < mid; ++j) {
-            left->key[j] = root->key[j];
-            left->child[j] = root->child[j];
-        }
-        left->child[j] = root->child[j];
-
-        Node* right = empty_node();
-        right->n_key = order - mid - 1;
-        for (j = mid + 1, k = 0; j < order; ++j, ++k) {
-            right->key[k] = root->key[j];
-            right->child[k] = root->child[j];
-        }
-        right->child[k] = root->child[j];
-
+        split_to(new_root, root, 0);
         delete_node(root);
 
-        new_root->child[0] = left;
-        new_root->child[1] = right;
         root = new_root;
     }
     return root;
