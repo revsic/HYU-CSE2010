@@ -293,6 +293,14 @@ int main() {
             inorder(tree->root, print_key);
             fprintf(output, "\n");
             break;
+        case 'f':
+            fscanf(input, "%d", &num);
+            if (find(tree, num).child != NULL) {
+                fprintf(output, "key exist\n");
+            } else {
+                fprintf(output, "couldn't find key\n");
+            }
+            break;
         default:
             break;
         }
