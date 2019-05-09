@@ -164,10 +164,9 @@ int insert_internal(Node* node, int key, int order) {
 
 void insert(BTree* tree, int key) {
     if (tree->root == NULL) {
-        Node* root = empty_node(tree->order);
-        root->n_key = 1;
-        root->key[0] = key;
-        tree->root = root;
+        tree->root = empty_node(tree->order);
+        tree->root->n_key = 1;
+        tree->root->key[0] = key;
         return;
     }
 
@@ -181,25 +180,30 @@ void insert(BTree* tree, int key) {
     }
 }
 
-void inorder(Node* node, FILE* fp) {
+void inorder(Node* node, void(*callback)(int key)) {
     if (node) {
         int i;
         for (i = 0; i < node->n_key; ++i) {
-            inorder(node->child[i], fp);
-            fprintf(fp, "%d ", node->key[i]);
+            inorder(node->child[i], callback);
+            callback(node->key[i]);
         }
-        inorder(node->child[i], fp);
+        inorder(node->child[i], callback);
     }
 }
 
-void delete_node_recur(Node* node) {
+void postorder(Node* node, void(*callback)(Node*)) {
     if (node) {
         int i;
         for (i = 0; i <= node->n_key; ++i) {
-            delete_node_recur(node->child[i]);
+            postorder(node->child[i], callback);
         }
-        delete_node(node);
+        callback(node);
     }
+}
+
+FILE* output;
+void print_key(int key) {
+    fprintf(output, "%d ", key);
 }
 
 BTree* empty_tree(int order) {
@@ -210,13 +214,13 @@ BTree* empty_tree(int order) {
 }
 
 void delete_btree(BTree* tree) {
-    delete_node_recur(tree->root);
+    postorder(tree->root, delete_node);
     free(tree);
 }
 
 int main() {
+    output = fopen("./output.txt", "w");
     FILE* input = fopen("./input.txt", "r");
-    FILE* output = fopen("./output.txt", "w");
 
     BTree* tree = empty_tree(3);
 
@@ -229,7 +233,7 @@ int main() {
             insert(tree, num);
             break;
         case 'p':
-            inorder(tree->root, output);
+            inorder(tree->root, print_key);
             fprintf(output, "\n");
             break;
         default:
