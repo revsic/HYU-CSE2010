@@ -174,16 +174,34 @@ void swap(int *a, int* b) {
     *b = tmp;
 }
 
-void sort_node(Graph* graph, Queue* queue) {
-    int i, j;
-    int* node = graph->node;
-    int* indices = queue->queue;
-    for (i = 1; i <= queue->size; ++i) {
-        for (j = 0; j < queue->size - i; ++j) {
-            if (node[indices[j]] > node[indices[j + 1]]) {
-                swap(&indices[j], &indices[j + 1]);
-            }
+void propagate(int* key, int* value, int size, int idx) {
+    int child;
+    // until node doesn't have leaf
+    for (; idx * 2 <= size; idx = child) {
+        child = idx * 2;
+        // if node have right child then get higher one
+        if (child + 1 <= size && value[key[child - 1]] < value[key[child]]) {
+            child += 1;
         }
+        // propagate
+        if (value[key[idx - 1]] < value[key[child - 1]]) {
+            swap(&key[child - 1], &key[idx - 1]);
+        } else {
+            break;
+        }
+    }
+}
+
+void heap_sort(Graph* graph, Queue* queue) {
+    int i;
+    int* key = queue->queue;
+    int size = queue->size;
+    for (i = size / 2; i > 0; --i) {
+        propagate(key, graph->node, size, i);
+    }
+    for (i = size - 1; i > 0; --i) {
+        swap(&key[0], &key[i]);
+        propagate(key, graph->node, i, 1);
     }
 }
 
@@ -205,7 +223,7 @@ DynArray topological_sort(Graph* graph) {
         return make_dyn_array(0);
     }
 
-    sort_node(graph, &queue);
+    heap_sort(graph, &queue);
 
     int elem;
     int idx = -1;
@@ -221,7 +239,7 @@ DynArray topological_sort(Graph* graph) {
                 enqueue(&tmp, i);
             }
         }
-        sort_node(graph, &tmp);
+        heap_sort(graph, &tmp);
         for (i = tmp.size; i > 0; --i) {
             enqueue(&queue, front(&tmp));
             dequeue(&tmp);
