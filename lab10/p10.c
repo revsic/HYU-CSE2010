@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Structure for Graph representation.
 typedef struct {
     int* node;
     int** matrix;
@@ -8,6 +9,7 @@ typedef struct {
     int capacity;
 } Graph;
 
+// Structure for Queue representation.
 typedef struct {
     int* queue;
     int size;
@@ -15,11 +17,13 @@ typedef struct {
     int front, rear;
 } Queue;
 
+// Structure for dynamic allocated array.
 typedef struct {
     int* array;
     int size;
 } DynArray;
 
+// Create new empty graph with given capacity and initialize with zero.
 Graph make_graph(int capacity) {
     int i, j;
     Graph graph;
@@ -39,6 +43,7 @@ Graph make_graph(int capacity) {
     return graph;
 }
 
+// Free graph structure (free only member not object itself).
 void delete_graph(Graph* graph) {
     int i;
     for (i = 0; i < graph->capacity; ++i) {
@@ -48,6 +53,7 @@ void delete_graph(Graph* graph) {
     free(graph->node);
 }
 
+// Print adjacency matrix to given stream.
 void print_matrix(Graph* graph, FILE* fp) {
     int i, j;
     fprintf(fp, "  ");
@@ -65,6 +71,7 @@ void print_matrix(Graph* graph, FILE* fp) {
     }
 }
 
+// Create new empty queue with given capacity.
 Queue make_queue(int capacity) {
     Queue queue;
     queue.queue = malloc(sizeof(int) * capacity);
@@ -75,18 +82,23 @@ Queue make_queue(int capacity) {
     return queue;
 }
 
+// Free the member of queue, not itself.
 void delete_queue(Queue* queue) {
     free(queue->queue);
 }
 
+// Create new dynamic allocated array with given size.
 DynArray make_dyn_array(int size) {
     int i;
     DynArray dyn_array;
     dyn_array.size = size;
+    // if size is zero
     if (size == 0) {
         dyn_array.array = NULL;
     } else {
+        // if size is not zero
         dyn_array.array = malloc(sizeof(int) * size);
+        // initialize with zero
         for (i = 0; i < size; ++i) {
             dyn_array.array[i] = 0;
         }
@@ -94,22 +106,33 @@ DynArray make_dyn_array(int size) {
     return dyn_array;
 }
 
+// Free the member of dynamic allocated array.
 void delete_dyn_array(DynArray* arr) {
     free(arr->array);
 }
 
+// Return if queue is empty.
 int empty(Queue* queue) {
     return queue->size <= 0;
 }
 
+// Return if queue is full.
 int full(Queue* queue) {
     return queue->size >= queue->capacity;
 }
 
+// Get first element of queue.
+// Returns:
+//     return invalid value if queue is empty.
+//     return first element if queue has elements.
 int front(Queue* queue) {
     return queue->queue[queue->front];
 }
 
+// Append element to queue.
+// Returns:
+//     return 0 if queue is full.
+//     return 1 if success.
 int enqueue(Queue* queue, int elem) {
     if (full(queue)) {
         return 0;
@@ -120,6 +143,10 @@ int enqueue(Queue* queue, int elem) {
     return 1;
 }
 
+// Remove element from queue.
+// Returns:
+//     return 0 if queue is empty.
+//     return 1 if success.
 int dequeue(Queue* queue) {
     if (empty(queue)) {
         return 0;
@@ -129,6 +156,9 @@ int dequeue(Queue* queue) {
     return 1;
 }
 
+// Insert multiple nodes to graph.
+// Returns:
+//     number of inserted nodes (since the capacity of graph).
 int insert_multiple_node(Graph* graph, int* nodes, int n_node) {
     int i;
     int rest = graph->capacity - graph->size;
@@ -140,6 +170,10 @@ int insert_multiple_node(Graph* graph, int* nodes, int n_node) {
     return n_iter;
 }
 
+// Insert node to graph.
+// Returns:
+//     return 1 if success.
+//     return 0 if graph is full.
 int insert_node(Graph* graph, int node) {
     if (graph->size < graph->capacity) {
         graph->node[graph->size++] = node;
@@ -148,6 +182,10 @@ int insert_node(Graph* graph, int node) {
     return 0;
 }
 
+// Find index of given node.
+// Returns:
+//     return -1 if it couldn't find given node.
+//     return index if node is found.
 int find_idx(Graph* graph, int a) {
     int i;
     for (i = 0; i < graph->size; ++i) {
@@ -158,6 +196,10 @@ int find_idx(Graph* graph, int a) {
     return -1;
 }
 
+// Insert edge from a to b
+// Returns:
+//     return 0 if insertion failure.
+//     return 1 if success.
 int insert_edge(Graph* graph, int a, int b) {
     int a_idx = find_idx(graph, a);
     int b_idx = find_idx(graph, b);
@@ -168,12 +210,14 @@ int insert_edge(Graph* graph, int a, int b) {
     return 1;
 }
 
+// Swap to integer values.
 void swap(int *a, int* b) {
     int tmp = *a;
     *a = *b;
     *b = tmp;
 }
 
+// Propagating element of max heap.
 void propagate(int* key, int* value, int size, int idx) {
     int child;
     // until node doesn't have leaf
@@ -192,24 +236,34 @@ void propagate(int* key, int* value, int size, int idx) {
     }
 }
 
+// Sorting queue with node from graph.
 void heap_sort(Graph* graph, Queue* queue) {
     int i;
     int* key = queue->queue;
     int size = queue->size;
+    // make heap
     for (i = size / 2; i > 0; --i) {
         propagate(key, graph->node, size, i);
     }
+    // sorting
     for (i = size - 1; i > 0; --i) {
         swap(&key[0], &key[i]);
         propagate(key, graph->node, i, 1);
     }
 }
 
+// Topological sort.
+// Returns:
+//     DynArray(0, NULL) if graph is not directed or acyclic.
+//     proper DynArray if topological sort success.
 DynArray topological_sort(Graph* graph) {
     int i, j;
     int top = 0;
+    // queue for graph traversal
     Queue queue = make_queue(graph->size);
+    // array for indegree memoization
     DynArray indegree = make_dyn_array(graph->size);
+    // compute indegree of each node
     for (i = 0; i < graph->size; ++i) {
         for (j = 0; j < graph->size; ++j) {
             indegree.array[i] += graph->matrix[j][i];
@@ -219,26 +273,34 @@ DynArray topological_sort(Graph* graph) {
         }
     }
 
+    // if graph has cycle
     if (queue.size == 0) {
         return make_dyn_array(0);
     }
 
+    // sort queue
     heap_sort(graph, &queue);
 
     int elem;
     int idx = -1;
+    // temporal queue
     Queue tmp = make_queue(graph->size);
+    // result array
     DynArray arr = make_dyn_array(graph->size);
+    // while queue is not empty
     while (!empty(&queue)) {
+        // append to result array
         elem = front(&queue);
         arr.array[++idx] = graph->node[elem];
         dequeue(&queue);
 
+        // reduce indegree and check if it is zero
         for (i = 0; i < graph->size; ++i) {
             if (graph->matrix[elem][i] == 1 && --indegree.array[i] == 0) {
                 enqueue(&tmp, i);
             }
         }
+        // sort queue
         heap_sort(graph, &tmp);
         for (i = tmp.size; i > 0; --i) {
             enqueue(&queue, front(&tmp));
@@ -246,21 +308,25 @@ DynArray topological_sort(Graph* graph) {
         }
     }
 
+    // free memory
     delete_dyn_array(&indegree);
     delete_queue(&queue);
     return arr;
 }
 
 int main() {
+    // open files
     FILE* input = fopen("input.txt", "r");
     FILE* output = fopen("output.txt", "w");
 
+    // read line
     char line[1024] = { 0, };
     fgets(line, 1024, input);
 
     int n_read, num;
     char* ptr = line;
 
+    // get node ids
     int len = 0;
     int temporal[512] = { 0, };
     while (sscanf(ptr, "%d%n", &num, &n_read) == 1) {
@@ -268,9 +334,11 @@ int main() {
         ptr += n_read;
     }
 
+    // make graph with given node ids
     Graph graph = make_graph(len);
     insert_multiple_node(&graph, temporal, len);
 
+    // get edges
     fgets(line, 1024, input);
     ptr = line;
 
@@ -281,10 +349,12 @@ int main() {
         ptr += n_read;
     }
 
+    // print adjacency matrix
     fprintf(output, "Adjacency matrix\n");
     print_matrix(&graph, output);
     fprintf(output, "\n\n\n");
 
+    // topological sort
     DynArray arr = topological_sort(&graph);
     if (arr.size == 0) {
         fprintf(output, "Graph should be acyclic.\n");
@@ -297,6 +367,7 @@ int main() {
         delete_dyn_array(&arr);
     }
 
+    // free memory
     delete_graph(&graph);
     return 0;
 }
