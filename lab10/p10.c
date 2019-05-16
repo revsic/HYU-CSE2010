@@ -168,6 +168,25 @@ int insert_edge(Graph* graph, int a, int b) {
     return 1;
 }
 
+void swap(int *a, int* b) {
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+
+void sort_node(Graph* graph, Queue* queue) {
+    int i, j;
+    int* node = graph->node;
+    int* indices = queue->queue;
+    for (i = 1; i <= queue->size; ++i) {
+        for (j = 0; j < queue->size - i; ++j) {
+            if (node[indices[j]] > node[indices[j + 1]]) {
+                swap(&indices[j], &indices[j + 1]);
+            }
+        }
+    }
+}
+
 DynArray topological_sort(Graph* graph) {
     int i, j;
     int top = 0;
@@ -186,8 +205,11 @@ DynArray topological_sort(Graph* graph) {
         return make_dyn_array(0);
     }
 
+    sort_node(graph, &queue);
+
     int elem;
     int idx = -1;
+    Queue tmp = make_queue(graph->size);
     DynArray arr = make_dyn_array(graph->size);
     while (!empty(&queue)) {
         elem = front(&queue);
@@ -196,18 +218,19 @@ DynArray topological_sort(Graph* graph) {
 
         for (i = 0; i < graph->size; ++i) {
             if (graph->matrix[elem][i] == 1 && --indegree.array[i] == 0) {
-                enqueue(&queue, i);
+                enqueue(&tmp, i);
             }
+        }
+        sort_node(graph, &tmp);
+        for (i = tmp.size; i > 0; --i) {
+            enqueue(&queue, front(&tmp));
+            dequeue(&tmp);
         }
     }
 
     delete_dyn_array(&indegree);
     delete_queue(&queue);
     return arr;
-}
-
-int cmp(const void* a, const void* b) {
-    return *(int*)a - *(int*)b;
 }
 
 int main() {
@@ -226,8 +249,6 @@ int main() {
         temporal[len++] = num;
         ptr += n_read;
     }
-
-    qsort(temporal, len, sizeof(int), &cmp);
 
     Graph graph = make_graph(len);
     insert_multiple_node(&graph, temporal, len);
