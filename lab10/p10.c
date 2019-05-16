@@ -355,12 +355,13 @@ int main() {
     fprintf(output, "\n\n\n");
 
     // topological sort
+    int i;
     DynArray arr = topological_sort(&graph);
     if (arr.size == 0) {
         fprintf(output, "Graph should be acyclic.\n");
     } else {
         fprintf(output, "TopSort Result : ");
-        for (int i = 0; i < arr.size; ++i) {
+        for (i = 0; i < arr.size; ++i) {
             fprintf(output, "%d ", arr.array[i]);
         }
         fprintf(output, "\n");
