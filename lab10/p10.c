@@ -206,6 +206,10 @@ DynArray topological_sort(Graph* graph) {
     return arr;
 }
 
+int cmp(const void* a, const void* b) {
+    return *(int*)a - *(int*)b;
+}
+
 int main() {
     FILE* input = fopen("input.txt", "r");
     FILE* output = fopen("output.txt", "w");
@@ -222,6 +226,8 @@ int main() {
         temporal[len++] = num;
         ptr += n_read;
     }
+
+    qsort(temporal, len, sizeof(int), &cmp);
 
     Graph graph = make_graph(len);
     insert_multiple_node(&graph, temporal, len);
