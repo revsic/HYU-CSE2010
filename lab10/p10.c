@@ -273,11 +273,6 @@ DynArray topological_sort(Graph* graph) {
         }
     }
 
-    // if graph has cycle
-    if (queue.size == 0) {
-        return make_dyn_array(0);
-    }
-
     // sort queue
     heap_sort(graph, &queue);
 
@@ -308,9 +303,25 @@ DynArray topological_sort(Graph* graph) {
         }
     }
 
+    // check cycle in graph
+    int cycle = 0;
+    for (i = 0; i < graph->size; ++i) {
+        if (indegree.array[i] != 0) {
+            cycle = 1;
+            break;
+        }
+    }
+
     // free memory
     delete_dyn_array(&indegree);
     delete_queue(&queue);
+
+    // if graph have cycle
+    if (cycle) {
+        delete_dyn_array(&arr);
+        // return null array
+        return make_dyn_array(0);
+    }
     return arr;
 }
 
