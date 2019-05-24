@@ -181,7 +181,7 @@ void split_to(Node* parent, Node* child, int insertion_point, int order) {
 }
 
 // Return non-zero value if current child is rotatable.
-int rotatable(Node* node, int pos, int order) {
+int insert_rotatable(Node* node, int pos, int order) {
     int left, right;
     // check left rotatable
     for (left = pos - 1; left >= 0; --left) {
@@ -293,7 +293,7 @@ int insert_internal(Node* node, int key, int order) {
         return result;
     // if rotation is required
     } else if (result == ROTATION_REQUIRED) {
-        int pos = rotatable(node, i, order);
+        int pos = insert_rotatable(node, i, order);
         // if rotation available
         if (pos != 0) {
             // if left rotation available
