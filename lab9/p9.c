@@ -381,6 +381,9 @@ int insert(BTree* tree, int key) {
     return result;
 }
 
+// Return right most node from child nodes.
+// Exception:
+//     if node is null -> segmentation fault
 Node* right_most_node(Node* node) {
     Node* largest_child = node->child[node->n_key];
     if (largest_child != NULL) {
@@ -389,6 +392,9 @@ Node* right_most_node(Node* node) {
     return node;
 }
 
+// Return left most node from child nodes.
+// Exception:
+//     if node is null -> segmentation fault
 Node* left_most_node(Node* node) {
     Node* smallest_child = node->child[0];
     if (smallest_child != NULL) {
@@ -397,24 +403,56 @@ Node* left_most_node(Node* node) {
     return node;
 }
 
+// Merge two nodes on each side of the base key.
 Node* merge_node(Node* left, Node* right, int base_key, int order) {
     int i;
     Node* merged = empty_node(order);
     merged->n_key = left->n_key + right->n_key + 1;
 
+    // copy left key
     for (i = 0; i < left->n_key; ++i) {
         merged->key[i] = left->key[i];
         merged->child[i] = left->child[i];
     }
-    merged->key[i] = base_key;
     merged->child[i] = left->child[i];
 
-    int base = i;
+    // copy base key
+    merged->key[i] = base_key;
+
+    // copy right key
+    int base = i + 1;
     for (i = 0; i < right->n_key; ++i) {
-        merged->key
+        merged->key[base + i] = right->key[i];
+        merged->child[base + i] = right->child[i];
     }
+    merged->child[base + i] = right->child[i];
+
+    return merged;
 }
 
+// Merge child with given base key index.
+// Returns:
+//     index where base key is inserted
+int merge(Node* node, int idx, int order) {
+    int key = node->key[idx];
+    Node* left = node->child[idx];
+    Node* right = node->child[idx + 1];
+    // index where base key is inserted
+    int res = left->n_key;
+    // merge left and right node
+    Node* merged = merge_node(left, right, key, order);
+    // free memory
+    delete_node(left);
+    delete_node(right);
+    // delete proper child and key
+    delete_child(node, idx);
+    delete_key(node, idx);
+    // assign new merged child
+    node->child[idx] = merged;
+    return res;
+}
+
+// Remove key from given node.
 int remove_node(Node* node, int key_idx, int order) {
     int bound = lower_bound(order);
     // if given node is leaf
@@ -431,7 +469,7 @@ int remove_node(Node* node, int key_idx, int order) {
         Node* left = node->child[key_idx];
         Node* right = node->child[key_idx + 1];
 
-        // if left node has sufficient keys to poll largest key up
+        // if left node has sufficient keys to pull largest key up
         if (left->n_key > bound) {
             // find largest key
             Node* right_most = right_most_node(left);
@@ -440,7 +478,7 @@ int remove_node(Node* node, int key_idx, int order) {
             // swap it and remove key
             node->key[key_idx] = largest_key;
             return remove_internal(left, largest_key, order);
-        // if right node has sufficient keys to poll smallest key up 
+        // if right node has sufficient keys to pull smallest key up 
         } else if (right->n_key > bound) {
             // find smallest key
             Node* left_most = left_most_node(right);
@@ -451,21 +489,31 @@ int remove_node(Node* node, int key_idx, int order) {
             return remove_internal(right, smallest_key, order);
         // merge child
         } else {
-
+            int idx = merge(node, key_idx, order);
+            // remove key from merged node
+            remove_node(node->child[key_idx], idx, order);
+            if (node->n_key < bound) {
+                return UNDERFLOW_DETECTED;
+            } else {
+                return DELETE_SUCCESS;   
+            }
         }
     }
 }
 
+// Internal implementation of method remove.
 int remove_internal(Node* node, int key, int order) {
     int i, result;
+    // if given key couldn't be found
     if (node == NULL) {
         return DELETE_FAIL;
     }
-
+    // searching key
     for (i = 0; i < node->n_key; ++i) {
+        // if key found
         if (key == node->key[i]) {
-            result = remove_node(node, i, order);
-            break;
+            return remove_node(node, i, order);
+        // if child could have key
         } else if (key < node->key[i]) {
             result = remove_internal(node->child[i], key, order);
             break;
@@ -475,11 +523,37 @@ int remove_internal(Node* node, int key, int order) {
         result = remove_internal(node->child[i], key, order);
     }
 
-
+    // if underflow occured in i-th child
+    if (result == UNDERFLOW_DETECTED) {
+        int bound = lower_bound(order);
+        // if left rotatable
+        if (i > 0 && node->child[i - 1]->n_key > bound) {
+            rotate_right(node, i - 1, i);
+        // if right rotatable
+        } else if (i < node->n_key && node->child[i + 1]->n_key > bound) {
+            rotate_left(node, i + 1, i);
+        // if merge operation required
+        } else {
+            // for non-zero index
+            if (i > 0) {
+                merge(node, i - 1, order);
+            // for zero
+            } else {
+                merge(node, i, order);
+            }
+        }
+        result = DELETE_SUCCESS;
+    }
+    return result;
 }
 
+// Remove given key from tree.
 int remove(BTree* tree, int key) {
-    return remove_internal(tree->root, key, tree->order);
+    int res = remove_internal(tree->root, key, tree->order);
+    if (tree->root != NULL && tree->root->n_key < 1) {
+        tree->root = tree->root->child[0];
+    }
+    return res;
 }
 
 // Inorder traversal with given callback.
@@ -549,6 +623,10 @@ int main() {
             } else {
                 fprintf(output, "couldn't find key\n");
             }
+            break;
+        case 'd':
+            fscanf(input, "%d", &num);
+            remove(tree, num);
             break;
         default:
             break;
