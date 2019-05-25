@@ -25,7 +25,14 @@ enum InsertStatus {
     INSERT_FAIL = 0,
     INSERT_SUCCESS = 1,
     INSERT_REQUIRED = 2,
-    ROTATION_REQUIRED = 3,
+    OVERFLOW_DETECTED = 3,
+};
+
+// Enums for deletion status.
+enum DeleteStatus {
+    DELETE_FAIL = 0,
+    DELETE_SUCCESS = 1,
+    UNDERFLOW_DETECTED = 2,
 };
 
 // Swap two integers.
@@ -33,6 +40,11 @@ void swap(int* a, int* b) {
     int tmp = *a;
     *a = *b;
     *b = tmp;
+}
+
+// Return lower bound for number of keys.
+int lower_bound(int order) {
+    return order & 1 == 0 ? order / 2 - 1 : order / 2;
 }
 
 // Create empty node with given order.
@@ -291,8 +303,8 @@ int insert_internal(Node* node, int key, int order) {
     // if insertion end
     if (result == INSERT_FAIL || result == INSERT_SUCCESS) {
         return result;
-    // if rotation is required
-    } else if (result == ROTATION_REQUIRED) {
+    // if number of key overflow
+    } else if (result == OVERFLOW_DETECTED) {
         int pos = insert_rotatable(node, i, order);
         // if rotation available
         if (pos != 0) {
@@ -315,7 +327,7 @@ int insert_internal(Node* node, int key, int order) {
                 return INSERT_SUCCESS;
             // if current node overflow
             } else {
-                return ROTATION_REQUIRED;
+                return OVERFLOW_DETECTED;
             }
         }
     // if insertion required in this node
@@ -334,7 +346,7 @@ int insert_internal(Node* node, int key, int order) {
             return INSERT_SUCCESS;
         // if current node overflow
         } else {
-            return ROTATION_REQUIRED;
+            return OVERFLOW_DETECTED;
         }
     }
     return INSERT_SUCCESS;
@@ -356,7 +368,7 @@ int insert(BTree* tree, int key) {
     // try insert key
     int result = insert_internal(tree->root, key, tree->order);
     // if root node overflow
-    if (result == ROTATION_REQUIRED) {
+    if (result == OVERFLOW_DETECTED) {
         Node* new_root = empty_node(tree->order);
         // split current root and assign to new root
         split_to(new_root, tree->root, 0, tree->order);
@@ -367,6 +379,107 @@ int insert(BTree* tree, int key) {
         result = INSERT_SUCCESS;
     }
     return result;
+}
+
+Node* right_most_node(Node* node) {
+    Node* largest_child = node->child[node->n_key];
+    if (largest_child != NULL) {
+        return right_most_node(largest_child);
+    }
+    return node;
+}
+
+Node* left_most_node(Node* node) {
+    Node* smallest_child = node->child[0];
+    if (smallest_child != NULL) {
+        return left_most_node(smallest_child);
+    }
+    return node;
+}
+
+Node* merge_node(Node* left, Node* right, int base_key, int order) {
+    int i;
+    Node* merged = empty_node(order);
+    merged->n_key = left->n_key + right->n_key + 1;
+
+    for (i = 0; i < left->n_key; ++i) {
+        merged->key[i] = left->key[i];
+        merged->child[i] = left->child[i];
+    }
+    merged->key[i] = base_key;
+    merged->child[i] = left->child[i];
+
+    int base = i;
+    for (i = 0; i < right->n_key; ++i) {
+        merged->key
+    }
+}
+
+int remove_node(Node* node, int key_idx, int order) {
+    int bound = lower_bound(order);
+    // if given node is leaf
+    if (node->child[key_idx] == NULL) {
+        delete_key(node, key_idx);
+        // if number of key satisfy lower bound
+        if (node->n_key >= bound) {
+            return DELETE_SUCCESS;
+        } else {
+            return UNDERFLOW_DETECTED;
+        }
+    // if given is internal node
+    } else {
+        Node* left = node->child[key_idx];
+        Node* right = node->child[key_idx + 1];
+
+        // if left node has sufficient keys to poll largest key up
+        if (left->n_key > bound) {
+            // find largest key
+            Node* right_most = right_most_node(left);
+            int largest_key = right_most->key[right_most->n_key - 1];
+
+            // swap it and remove key
+            node->key[key_idx] = largest_key;
+            return remove_internal(left, largest_key, order);
+        // if right node has sufficient keys to poll smallest key up 
+        } else if (right->n_key > bound) {
+            // find smallest key
+            Node* left_most = left_most_node(right);
+            int smallest_key = left_most->key[0];
+
+            // swap it and remove key
+            node->key[key_idx] = smallest_key;
+            return remove_internal(right, smallest_key, order);
+        // merge child
+        } else {
+
+        }
+    }
+}
+
+int remove_internal(Node* node, int key, int order) {
+    int i, result;
+    if (node == NULL) {
+        return DELETE_FAIL;
+    }
+
+    for (i = 0; i < node->n_key; ++i) {
+        if (key == node->key[i]) {
+            result = remove_node(node, i, order);
+            break;
+        } else if (key < node->key[i]) {
+            result = remove_internal(node->child[i], key, order);
+            break;
+        }
+    }
+    if (i == node->n_key) {
+        result = remove_internal(node->child[i], key, order);
+    }
+
+
+}
+
+int remove(BTree* tree, int key) {
+    return remove_internal(tree->root, key, tree->order);
 }
 
 // Inorder traversal with given callback.
