@@ -452,8 +452,11 @@ int merge(Node* node, int idx, int order) {
     return res;
 }
 
+// forward declaration
+int delete_internal(Node* node, int key, int order);
+
 // Remove key from given node.
-int remove_node(Node* node, int key_idx, int order) {
+int remove_key(Node* node, int key_idx, int order) {
     int bound = lower_bound(order);
     // if given node is leaf
     if (node->child[key_idx] == NULL) {
@@ -477,7 +480,7 @@ int remove_node(Node* node, int key_idx, int order) {
 
             // swap it and remove key
             node->key[key_idx] = largest_key;
-            return remove_internal(left, largest_key, order);
+            return delete_internal(left, largest_key, order);
         // if right node has sufficient keys to pull smallest key up 
         } else if (right->n_key > bound) {
             // find smallest key
@@ -486,12 +489,12 @@ int remove_node(Node* node, int key_idx, int order) {
 
             // swap it and remove key
             node->key[key_idx] = smallest_key;
-            return remove_internal(right, smallest_key, order);
+            return delete_internal(right, smallest_key, order);
         // merge child
         } else {
             int idx = merge(node, key_idx, order);
             // remove key from merged node
-            remove_node(node->child[key_idx], idx, order);
+            remove_key(node->child[key_idx], idx, order);
             if (node->n_key < bound) {
                 return UNDERFLOW_DETECTED;
             } else {
@@ -501,8 +504,8 @@ int remove_node(Node* node, int key_idx, int order) {
     }
 }
 
-// Internal implementation of method remove.
-int remove_internal(Node* node, int key, int order) {
+// Internal implementation of method delete.
+int delete_internal(Node* node, int key, int order) {
     int i, result;
     // if given key couldn't be found
     if (node == NULL) {
@@ -512,15 +515,15 @@ int remove_internal(Node* node, int key, int order) {
     for (i = 0; i < node->n_key; ++i) {
         // if key found
         if (key == node->key[i]) {
-            return remove_node(node, i, order);
+            return remove_key(node, i, order);
         // if child could have key
         } else if (key < node->key[i]) {
-            result = remove_internal(node->child[i], key, order);
+            result = delete_internal(node->child[i], key, order);
             break;
         }
     }
     if (i == node->n_key) {
-        result = remove_internal(node->child[i], key, order);
+        result = delete_internal(node->child[i], key, order);
     }
 
     // if underflow occured in i-th child
@@ -548,8 +551,8 @@ int remove_internal(Node* node, int key, int order) {
 }
 
 // Remove given key from tree.
-int remove(BTree* tree, int key) {
-    int res = remove_internal(tree->root, key, tree->order);
+int delete(BTree* tree, int key) {
+    int res = delete_internal(tree->root, key, tree->order);
     if (tree->root != NULL && tree->root->n_key < 1) {
         tree->root = tree->root->child[0];
     }
@@ -626,7 +629,7 @@ int main() {
             break;
         case 'd':
             fscanf(input, "%d", &num);
-            remove(tree, num);
+            delete(tree, num);
             break;
         default:
             break;
