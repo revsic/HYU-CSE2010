@@ -1,0 +1,62 @@
+3
+Linear
+11
+i 1
+i 11
+i 4
+i 15
+i 22
+f 64
+i 22
+i 23
+i 24
+i 9
+i 18
+i 77
+i 16
+d 4
+d 18
+d 85
+p
+q
+Quadratic
+11
+i 1
+i 11
+i 4
+i 15
+i 22
+f 64
+i 22
+i 23
+i 24
+i 9
+i 18
+d 4
+d 18
+d 86
+p
+q
+Double
+11
+i 1
+i 11
+i 4
+i 15
+i 22
+f 64
+i 22
+i 23
+i 24
+i 9
+i 18
+i 77
+d 4
+d 18
+d 87
+p
+q
+
+
+
+
