@@ -13,7 +13,7 @@ typedef struct {
     void* data;
 } Hasher;
 
-typedef int(*resolver_t)(int, void*);
+typedef int(*resolver_t)(int, int, void*);
 typedef void(*update_resolver_t)(struct HashTable_*);
 
 typedef struct {
@@ -54,8 +54,8 @@ Hasher modular_hasher(int mod) {
     return hasher;
 }
 
-int linear_resolver_f(int value, void* data) {
-    return value;
+int linear_resolver_f(int value, int resolve, void* data) {
+    return resolve;
 }
 
 Resolver linear_resolver() {
@@ -66,8 +66,8 @@ Resolver linear_resolver() {
     return resolver;
 }
 
-int quadratic_resolver_f(int value, void* data) {
-    return value * value;
+int quadratic_resolver_f(int value, int resolve, void* data) {
+    return resolve * resolve;
 }
 
 Resolver quadratic_resolver() {
@@ -78,9 +78,9 @@ Resolver quadratic_resolver() {
     return resolver;
 }
 
-int double_resolver_f(int value, void* data) {
+int double_resolver_f(int value, int resolve, void* data) {
     int mod = *(int*)data;
-    return mod - (value % mod);
+    return resolve * (mod - (value % mod));
 }
 
 Resolver double_resolver(int mod) {
@@ -117,7 +117,7 @@ HashTable modular_hashtable_cstr(int size, const char* str) {
     if (!strcmp(str, "Quadratic")) {
         return modular_hashtable(size, quadratic_resolver());
     } else if (!strcmp(str, "Double")) {
-        return modular_hashtable(size, double_resolver(size));
+        return modular_hashtable(size, double_resolver(7));
     }
     // default linear
     return modular_hashtable(size, linear_resolver());
@@ -134,13 +134,13 @@ int runhasher(HashTable* hashtable, int value) {
     return hasher->hasher(value, hasher->data);
 }
 
-int runresolver(HashTable* hashtable, int value) {
+int runresolver(HashTable* hashtable, int value, int resolve) {
     Resolver* resolver = &hashtable->resolver;
-    return resolver->resolver(value, resolver->data);
+    return resolver->resolver(value, resolve, resolver->data);
 }
 
 int hash(HashTable* hashtable, int value, int i) {
-    return (runhasher(hashtable, value) + runresolver(hashtable, i)) % hashtable->size;
+    return (runhasher(hashtable, value) + runresolver(hashtable, value, i)) % hashtable->size;
 }
 
 FindResult find_space(HashTable* hashtable, int value) {
@@ -229,7 +229,7 @@ int main() {
                 if (num != -1) {
                     fprintf(output, "%d\n", num);
                 } else {
-                    fprintf(output, "not found\n");
+                    fprintf(output, "Not found\n");
                 }
                 break;
             case 'p':
